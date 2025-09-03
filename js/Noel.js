@@ -60,6 +60,17 @@ class Noel extends Entity{
 		// 攻击视觉效果
 		this.attackEffectTimer=0;
 		this.showAttackRange=false;
+		this.attackAuraTimer=0;
+		this.attackParticles=[];
+
+		// 屏幕震动效果
+		this.screenShakeTimer=0;
+		this.screenShakeIntensity=0;
+
+		// 新增炫酷攻击特效
+		this.energyWaves = [];
+		this.impactParticles = [];
+		this.lightRays = [];
 	}
 	async loadHintImg(){
 		let img=await game.dataManager.loadImg('img/point.png');
@@ -80,13 +91,14 @@ class Noel extends Entity{
 	//更新人物的状态
 	update(delta){
 		this.updateAnimation(delta);
+		
+		// 检查死亡状态
+		if(this.isDead) return;
+
 		if(!game.eventManager.event)this.checkEvent();
 		
 		// 更新战斗计时器
 		this.updateCombatTimers();
-		
-		// 检查死亡状态
-		if(this.isDead) return;
 		
 		switch(this.status){
 		case "normal":
@@ -340,15 +352,12 @@ class Noel extends Entity{
 		game.ctx.shadowColor = 'transparent';
 		game.ctx.shadowBlur = 0;
 		
-		// 绘制攻击范围指示器
-		if(this.showAttackRange && this.attackEffectTimer > 0) {
-			this.drawAttackRange();
+		// 绘制炫酷的攻击特效（移除难看的红色方块）
+		if(this.status === 'attack' && this.attackTimer > 0) {
+			this.drawCoolAttackEffects();
 		}
 		
-		// 绘制攻击轨迹特效
-		if(this.status === 'attack' && this.attackTimer > 12 && this.attackTimer < 18) {
-			this.drawAttackTrail();
-		}
+		// 炫酷攻击特效都已经在 drawCoolAttackEffects() 中统一处理
 		
 		if(this.canInteract&&!game.eventManager.event){
 			let pos=game.camera.getDrawPos(this.position.sub(11,152));
@@ -363,31 +372,87 @@ class Noel extends Entity{
 	
 	updateCombatTimers(){
 		if(this.attackTimer>0) this.attackTimer--;
-		if(this.hurtTimer>0) this.hurtTimer--;  
+		if(this.hurtTimer>0) this.hurtTimer--;
 		if(this.invulnerableTimer>0) this.invulnerableTimer--;
 		if(this.attackEffectTimer>0) this.attackEffectTimer--;
+		if(this.attackAuraTimer>0) this.attackAuraTimer--;
+		if(this.screenShakeTimer>0) this.screenShakeTimer--;
+
+		// 更新攻击粒子效果
+		this.updateAttackParticles();
+
+		// 更新炫酷攻击特效
+		this.updateEnergyWaves();
+		this.updateImpactParticles();
+		this.updateLightRays();
 	}
-	
+
+	updateAttackParticles(){
+		// 更新粒子位置和生命周期
+		for(let i=0; i<this.attackParticles.length; i++){
+			let particle = this.attackParticles[i];
+			particle.x += particle.vx;
+			particle.y += particle.vy;
+			particle.life--;
+			particle.alpha = particle.life / particle.maxLife;
+
+			if(particle.life <= 0){
+				this.attackParticles.splice(i--, 1);
+			}
+		}
+	}
+
+	createAttackParticles(){
+		// 在攻击时创建粒子效果
+		let particleCount = 8;
+		let attackPos = this.position.add(this.facing * 25, -8);
+
+		for(let i=0; i<particleCount; i++){
+			let angle = (Math.PI * 2 * i / particleCount) + Math.random() * 0.5;
+			let speed = 2 + Math.random() * 3;
+
+			this.attackParticles.push({
+				x: attackPos.x,
+				y: attackPos.y,
+				vx: Math.cos(angle) * speed,
+				vy: Math.sin(angle) * speed - 1,
+				life: 20 + Math.random() * 10,
+				maxLife: 30,
+				alpha: 1,
+				color: Math.random() > 0.5 ? '#ffff00' : '#ffaa00'
+			});
+		}
+	}
+
 	updateAttack(delta){
 		let machine=this.animationMachine;
-		
-		// 攻击期间的移动效果
-		if(this.attackTimer > 18) {
-			// 攻击前摇：向后蓄力
-			this.velocity.x = -this.facing * 2;
-		} else if(this.attackTimer > 12) {
+
+		// 攻击期间的移动效果 - 更流畅的移动过渡
+		let progress = 1 - (this.attackTimer / Noel.AttackTime);
+
+		if(progress < 0.25) {
+			// 攻击前摇：缓慢向后蓄力，营造蓄势待发的感觉
+			let easeIn = progress / 0.25;
+			this.velocity.x = -this.facing * 2 * easeIn;
+		} else if(progress < 0.5) {
+			// 攻击蓄力阶段：停顿蓄力
+			this.velocity.x *= 0.8;
+		} else if(progress < 0.75) {
 			// 攻击爆发：快速向前冲刺
-			this.velocity.x = this.facing * 8;
+			let easeOut = (progress - 0.5) / 0.25;
+			let speed = 8 + easeOut * 4; // 速度逐渐增加
+			this.velocity.x = this.facing * speed;
 		} else {
-			// 攻击后摇：逐渐停止
-			this.velocity.x *= 0.6;
+			// 攻击后摇：平滑减速
+			let easeOut = (progress - 0.75) / 0.25;
+			this.velocity.x *= (0.9 - easeOut * 0.3);
 		}
-		
-		// 在攻击的有效帧窗口内进行命中检测（12-18之间）
-		if(this.attackTimer <= 18 && this.attackTimer > 12){
+
+		// 在攻击的有效帧窗口内进行命中检测（改进检测时机）
+		if(this.attackTimer <= 20 && this.attackTimer > 12){
 			this.checkAttackHit();
 		}
-		
+
 		this.attackTimer--;
 		if(this.attackTimer <= 0){
 			this.status = "normal";
@@ -423,8 +488,18 @@ class Noel extends Entity{
 		this.hasHitDuringAttack=false;
 		
 		// 启动攻击视觉效果
-		this.attackEffectTimer=20;
+		this.attackEffectTimer=24;
+		this.attackAuraTimer=32;
 		this.showAttackRange=true;
+
+		// 创建攻击粒子效果
+		this.createAttackParticles();
+
+		// 初始化炫酷攻击特效
+		this.initCoolAttackEffects();
+
+		// 触发屏幕震动
+		this.triggerScreenShake(12, 4);
 		
 		console.log('🗡️ Mouse2 执行攻击! 面向:' + (this.facing === 1 ? '右' : '左'));
 		return true;
@@ -438,6 +513,11 @@ class Noel extends Entity{
 			if(attackHitbox.containsRect(bossHurtbox)){
 				game.boss.takeDamage(Noel.AttackDamage, this.facing);
 				this.hasHitDuringAttack = true;
+
+				// 🎯 命中时创建冲击粒子效果
+				this.createImpactParticles();
+
+				console.log('💥 攻击命中！创建冲击特效');
 			}
 		}
 	}
@@ -485,27 +565,70 @@ class Noel extends Entity{
 	}
 	
 	drawAttackTrail(){
-		let startX = this.position.x - this.facing * 20;
-		let endX = this.position.x + this.facing * 30;
+		let startX = this.position.x - this.facing * 25;
+		let endX = this.position.x + this.facing * 35;
 		let y = this.position.y - 16;
-		
+
 		let startPos = game.camera.getDrawPos(new Vector(startX, y));
 		let endPos = game.camera.getDrawPos(new Vector(endX, y));
-		
-		// 攻击轨迹线
-		game.ctx.strokeStyle = '#ffff00';
-		game.ctx.lineWidth = 4;
-		game.ctx.lineCap = 'round';
-		
-		game.ctx.beginPath();
-		game.ctx.moveTo(startPos.x, startPos.y);
-		game.ctx.lineTo(endPos.x, endPos.y);
-		game.ctx.stroke();
-		
-		// 攻击轨迹发光效果
-		game.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
-		game.ctx.lineWidth = 8;
-		game.ctx.stroke();
+
+		game.ctx.save();
+
+		// 创建动态的攻击轨迹效果
+		let trailLength = endX - startX;
+		let segments = 10;
+
+		// 绘制多层轨迹以创造深度感
+		for(let layer = 0; layer < 3; layer++){
+			let alpha = (3 - layer) * 0.3;
+			let width = (4 - layer) * 2;
+			let offset = layer * 2;
+
+			game.ctx.strokeStyle = layer === 0 ? '#ffffff' :
+								 layer === 1 ? '#ffff00' : '#ffaa00';
+			game.ctx.lineWidth = width;
+			game.ctx.lineCap = 'round';
+			game.ctx.globalAlpha = alpha;
+
+			game.ctx.beginPath();
+			game.ctx.moveTo(startPos.x, startPos.y + offset);
+
+			// 创建波浪形的轨迹
+			for(let i = 1; i <= segments; i++){
+				let t = i / segments;
+				let x = startPos.x + (endPos.x - startPos.x) * t;
+				let wave = Math.sin(t * Math.PI * 2 + game.gameFrame * 0.5) * 3 * (1 - t);
+				let y = startPos.y + offset + wave;
+
+				if(i === 1){
+					game.ctx.lineTo(x, y);
+				} else {
+					game.ctx.lineTo(x, y);
+				}
+			}
+
+			game.ctx.stroke();
+		}
+
+		// 添加轨迹粒子效果
+		let particleCount = 6;
+		for(let i = 0; i < particleCount; i++){
+			let t = i / particleCount;
+			let x = startX + trailLength * t + Math.sin(game.gameFrame * 0.3 + i) * 5;
+			let yOffset = Math.sin(t * Math.PI + game.gameFrame * 0.4) * 4;
+			let particlePos = game.camera.getDrawPos(new Vector(x, y + yOffset));
+
+			game.ctx.globalAlpha = 0.8 - t * 0.6;
+			game.ctx.fillStyle = '#ffffff';
+			game.ctx.fillRect(particlePos.x - 1, particlePos.y - 1, 3, 3);
+
+			// 粒子发光效果
+			game.ctx.shadowColor = '#ffff00';
+			game.ctx.shadowBlur = 4;
+			game.ctx.fillRect(particlePos.x - 1, particlePos.y - 1, 3, 3);
+		}
+
+		game.ctx.restore();
 	}
 	
 	drawHealthBar(){
@@ -536,4 +659,294 @@ class Noel extends Entity{
 		game.ctx.textAlign = 'center';
 		game.ctx.fillText(`${this.health}/${Noel.MaxHealth}`, pos.x + barWidth/2, pos.y - 2);
 	}
+
+	triggerScreenShake(duration, intensity){
+		// 触发屏幕震动效果
+		this.screenShakeTimer = duration;
+		this.screenShakeIntensity = intensity;
+
+		// 如果相机支持震动，传递给相机
+		if(game.camera && typeof game.camera.setShake === 'function'){
+			game.camera.setShake(duration, intensity);
+		}
+	}
+
+	getScreenShakeOffset(){
+		// 获取屏幕震动的偏移量
+		if(this.screenShakeTimer <= 0) return {x: 0, y: 0};
+
+		let progress = this.screenShakeTimer / 12; // 假设最大持续时间为12
+		let currentIntensity = this.screenShakeIntensity * progress;
+
+		return {
+			x: (Math.random() - 0.5) * currentIntensity * 2,
+			y: (Math.random() - 0.5) * currentIntensity * 2
+		};
+	}
+
+	// ===== 新增炫酷攻击特效系统 =====
+
+	initCoolAttackEffects(){
+		// 初始化能量波纹
+		this.energyWaves = [];
+		for(let i = 0; i < 3; i++){
+			this.energyWaves.push({
+				radius: 0,
+				maxRadius: 40 + i * 15,
+				alpha: 1,
+				speed: 3 + i * 1.5,
+				color: i === 0 ? '#ffffff' : i === 1 ? '#00ffff' : '#ff00ff'
+			});
+		}
+
+		// 初始化光线
+		this.lightRays = [];
+		for(let i = 0; i < 8; i++){
+			let angle = (Math.PI * 2 * i / 8) + Math.PI/16; // 稍微偏移角度
+			this.lightRays.push({
+				angle: angle,
+				length: 60,
+				alpha: 1,
+				phase: i * 0.5,
+				color: i % 2 === 0 ? '#ffffff' : '#ffff00'
+			});
+		}
+
+		// 初始化冲击粒子
+		this.impactParticles = [];
+	}
+
+	updateEnergyWaves(){
+		for(let wave of this.energyWaves){
+			wave.radius += wave.speed;
+			wave.alpha = Math.max(0, 1 - (wave.radius / wave.maxRadius));
+
+			if(wave.radius > wave.maxRadius){
+				wave.radius = 0; // 重置波纹
+			}
+		}
+	}
+
+	updateImpactParticles(){
+		// 冲击粒子会在攻击命中时产生
+		for(let i = 0; i < this.impactParticles.length; i++){
+			let particle = this.impactParticles[i];
+			particle.x += particle.vx;
+			particle.y += particle.vy;
+			particle.life--;
+
+			if(particle.life <= 0){
+				this.impactParticles.splice(i--, 1);
+			}
+		}
+	}
+
+	updateLightRays(){
+		for(let ray of this.lightRays){
+			ray.alpha = 0.3 + Math.sin(game.gameFrame * 0.2 + ray.phase) * 0.7;
+			ray.length = 50 + Math.sin(game.gameFrame * 0.15 + ray.phase) * 20;
+		}
+	}
+
+	createImpactParticles(){
+		// 在攻击命中时创建爆炸粒子
+		let hitPos = this.position.add(this.facing * Noel.AttackRange/2, -8);
+		let particleCount = 12;
+
+		for(let i = 0; i < particleCount; i++){
+			let angle = Math.random() * Math.PI * 2;
+			let speed = 3 + Math.random() * 5;
+
+			this.impactParticles.push({
+				x: hitPos.x,
+				y: hitPos.y,
+				vx: Math.cos(angle) * speed,
+				vy: Math.sin(angle) * speed - 2,
+				life: 25 + Math.random() * 15,
+				color: Math.random() > 0.5 ? '#ff4444' : '#ffaa00',
+				size: 2 + Math.random() * 3
+			});
+		}
+	}
+
+	drawCoolAttackEffects(){
+		game.ctx.save();
+
+		let centerPos = game.camera.getDrawPos(this.position.sub(0, 16));
+		let progress = 1 - (this.attackTimer / Noel.AttackTime);
+
+		// 绘制能量波纹
+		this.drawEnergyWaves(centerPos, progress);
+
+		// 绘制激光剑轨迹
+		if(progress > 0.3 && progress < 0.8){
+			this.drawLaserSwordTrail(centerPos, progress);
+		}
+
+		// 绘制光线效果
+		if(progress > 0.2){
+			this.drawLightRays(centerPos, progress);
+		}
+
+		// 绘制冲击粒子
+		this.drawImpactParticles();
+
+		// 绘制攻击时的特殊光晕
+		if(progress > 0.4 && progress < 0.7){
+			this.drawAttackGlow(centerPos, progress);
+		}
+
+		game.ctx.restore();
+	}
+
+	drawEnergyWaves(centerPos, progress){
+		for(let wave of this.energyWaves){
+			if(wave.alpha > 0.1){
+				let currentRadius = wave.radius * (0.5 + progress * 0.5);
+
+				game.ctx.globalAlpha = wave.alpha * (1 - progress * 0.3);
+				game.ctx.strokeStyle = wave.color;
+				game.ctx.lineWidth = 2;
+				game.ctx.shadowColor = wave.color;
+				game.ctx.shadowBlur = 8;
+
+				game.ctx.beginPath();
+				game.ctx.arc(centerPos.x, centerPos.y, currentRadius, 0, Math.PI * 2);
+				game.ctx.stroke();
+
+				// 内圈高亮
+				game.ctx.strokeStyle = '#ffffff';
+				game.ctx.lineWidth = 1;
+				game.ctx.globalAlpha = wave.alpha * 0.5;
+				game.ctx.stroke();
+			}
+		}
+
+		game.ctx.shadowBlur = 0;
+	}
+
+	drawLaserSwordTrail(centerPos, progress){
+		let attackProgress = (progress - 0.3) / 0.5; // 0-1 之间的攻击进度
+		let swordLength = 80 * attackProgress;
+		let swordWidth = 6 * (1 - attackProgress * 0.7);
+
+		let startX = centerPos.x;
+		let endX = centerPos.x + this.facing * swordLength;
+		let y = centerPos.y;
+
+		// 绘制剑身主体
+		let gradient = game.ctx.createLinearGradient(startX, y, endX, y);
+		gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+		gradient.addColorStop(0.3, 'rgba(0, 255, 255, 0.8)');
+		gradient.addColorStop(0.7, 'rgba(255, 0, 255, 0.7)');
+		gradient.addColorStop(1, 'rgba(255, 255, 0, 0.3)');
+
+		game.ctx.strokeStyle = gradient;
+		game.ctx.lineWidth = swordWidth;
+		game.ctx.lineCap = 'round';
+		game.ctx.shadowColor = '#00ffff';
+		game.ctx.shadowBlur = 10;
+
+		game.ctx.beginPath();
+		game.ctx.moveTo(startX, y);
+		game.ctx.lineTo(endX, y);
+		game.ctx.stroke();
+
+		// 绘制剑刃光效
+		game.ctx.strokeStyle = '#ffffff';
+		game.ctx.lineWidth = swordWidth * 0.3;
+		game.ctx.shadowColor = '#ffffff';
+		game.ctx.shadowBlur = 15;
+		game.ctx.stroke();
+
+		// 剑尖特效
+		if(attackProgress > 0.8){
+			let tipX = endX;
+			let tipY = y;
+
+			game.ctx.fillStyle = '#ffffff';
+			game.ctx.shadowColor = '#ffff00';
+			game.ctx.shadowBlur = 20;
+			game.ctx.globalAlpha = (attackProgress - 0.8) / 0.2;
+
+			game.ctx.beginPath();
+			game.ctx.arc(tipX, tipY, 8, 0, Math.PI * 2);
+			game.ctx.fill();
+		}
+
+		game.ctx.shadowBlur = 0;
+	}
+
+	drawLightRays(centerPos, progress){
+		let rayProgress = (progress - 0.2) / 0.8; // 0-1
+
+		for(let ray of this.lightRays){
+			let startX = centerPos.x;
+			let startY = centerPos.y;
+			let endX = centerPos.x + Math.cos(ray.angle) * ray.length * rayProgress;
+			let endY = centerPos.y + Math.sin(ray.angle) * ray.length * rayProgress;
+
+			game.ctx.globalAlpha = ray.alpha * rayProgress;
+			game.ctx.strokeStyle = ray.color;
+			game.ctx.lineWidth = 1;
+			game.ctx.shadowColor = ray.color;
+			game.ctx.shadowBlur = 5;
+
+			game.ctx.beginPath();
+			game.ctx.moveTo(startX, startY);
+			game.ctx.lineTo(endX, endY);
+			game.ctx.stroke();
+		}
+
+		game.ctx.shadowBlur = 0;
+	}
+
+	drawImpactParticles(){
+		for(let particle of this.impactParticles){
+			let pos = game.camera.getDrawPos(new Vector(particle.x - particle.size/2, particle.y - particle.size/2));
+
+			game.ctx.globalAlpha = particle.life / 30;
+			game.ctx.fillStyle = particle.color;
+			game.ctx.shadowColor = particle.color;
+			game.ctx.shadowBlur = 3;
+
+			game.ctx.fillRect(pos.x, pos.y, particle.size, particle.size);
+
+			// 粒子尾迹
+			game.ctx.fillStyle = particle.color;
+			game.ctx.globalAlpha = particle.life / 60;
+			game.ctx.fillRect(pos.x - particle.vx, pos.y - particle.vy, particle.size * 0.5, particle.size * 0.5);
+		}
+
+		game.ctx.shadowBlur = 0;
+	}
+
+	drawAttackGlow(centerPos, progress){
+		let glowProgress = (progress - 0.4) / 0.3; // 0-1
+		let glowRadius = 25 + glowProgress * 15;
+
+		let gradient = game.ctx.createRadialGradient(
+			centerPos.x, centerPos.y, 0,
+			centerPos.x, centerPos.y, glowRadius
+		);
+		gradient.addColorStop(0, `rgba(255, 255, 255, ${0.8 * glowProgress})`);
+		gradient.addColorStop(0.5, `rgba(0, 255, 255, ${0.6 * glowProgress})`);
+		gradient.addColorStop(1, `rgba(255, 0, 255, 0)`);
+
+		game.ctx.fillStyle = gradient;
+		game.ctx.shadowColor = '#ffffff';
+		game.ctx.shadowBlur = 15;
+
+		game.ctx.beginPath();
+		game.ctx.arc(centerPos.x, centerPos.y, glowRadius, 0, Math.PI * 2);
+		game.ctx.fill();
+
+		game.ctx.shadowBlur = 0;
+	}
+
+	// 移除旧的攻击范围绘制方法
+	// drawAttackRange() - 已移除，避免难看的红色方块
+
+	// 移除旧的攻击轨迹方法，由新的激光剑轨迹替代
+	// drawAttackTrail() - 已移除，由 drawLaserSwordTrail() 替代
 }
