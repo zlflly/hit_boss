@@ -36,7 +36,18 @@ class Boss extends Entity {
 		this.image = image;
 		this.scale = 0.4;  // 调整缩放比例以适应游戏
 		
+		// 注意：物理碰撞箱保持为构造时传入的尺寸，避免被图片尺寸放大后卡墙
+		
 		this.anchor.set(0.5, 1.0);
+		
+		// 受击范围（Hurtbox）配置：相对渲染矩形的比例与偏移，便于微调
+		// widthScale/heightScale 为尺寸比例；offsetX/offsetY 为相对渲染矩形的偏移（0~1），正右/正下
+		this.hurtboxConfig = {
+			widthScale: 0.60,
+			heightScale: 0.65,
+			offsetX: 0.00,
+			offsetY: 0.25
+		};
 		
 		// 战斗属性
 		this.health = Boss.MaxHealth;
@@ -67,6 +78,29 @@ class Boss extends Entity {
 		this.specialAttackTimer = 0;
 		
 		console.log('🐉 Boss created with health:', this.health);
+	}
+
+	// 获取Boss的渲染矩形（与draw中偏移保持一致）
+	getRenderRect(){
+		if(!this.image){
+			return new Rect(this.position.sub(40,50), this.size);
+		}
+		let width = this.image.width * this.scale;
+		let height = this.image.height * this.scale;
+		let topLeft = this.position.sub(40, 50);
+		return new Rect(topLeft, new Vector(width, height));
+	}
+
+	// 基于渲染矩形计算Boss受击范围（水平居中，可向下偏移以贴合身体）
+	getHurtbox(){
+		let renderRect = this.getRenderRect();
+		let rw = renderRect.size.x, rh = renderRect.size.y;
+		let cfg = this.hurtboxConfig;
+		let width = rw * cfg.widthScale;
+		let height = rh * cfg.heightScale;
+		let x = renderRect.position.x + (rw - width) / 2 + cfg.offsetX * rw;
+		let y = renderRect.position.y + cfg.offsetY * rh;
+		return new Rect(new Vector(x, y), new Vector(width, height));
 	}
 	
 	update(delta) {
@@ -385,6 +419,15 @@ class Boss extends Entity {
 		
 		// 绘制光球
 		this.drawProjectiles();
+		
+		// 绘制受击范围（绿色框，便于调试对齐）
+		if(!this.isDead){
+			let hb = this.getHurtbox();
+			let pos = game.camera.getDrawPos(hb.position);
+			game.ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+			game.ctx.lineWidth = 2;
+			game.ctx.strokeRect(pos.x, pos.y, hb.size.x, hb.size.y);
+		}
 	}
 	
 	drawHealthBar() {
@@ -394,7 +437,11 @@ class Boss extends Entity {
 		let barWidth = 80;
 		let barHeight = 6;
 		
-		let pos = game.camera.getDrawPos(this.position.sub(barWidth / 2, 60));
+		// 基于渲染矩形水平居中，并放在头顶上方
+		let renderRect = this.getRenderRect();
+		let centerX = renderRect.position.x + renderRect.size.x / 2;
+		let topY = Math.max(0, renderRect.position.y - 12);
+		let pos = game.camera.getDrawPos(new Vector(centerX - barWidth / 2, topY));
 		
 		// 背景条
 		game.ctx.fillStyle = '#333';

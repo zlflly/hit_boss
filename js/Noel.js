@@ -14,7 +14,7 @@ class Noel extends Entity{
 	// 战斗系统参数
 	static MaxHealth=100;
 	static AttackDamage=25;
-	static AttackRange=40;
+	static AttackRange=56;
 	static AttackTime=24;
 	static HurtTime=30;
 	static InvulnerableTime=60;
@@ -55,6 +55,7 @@ class Noel extends Entity{
 		this.hurtTimer=0;
 		this.invulnerableTimer=0;
 		this.isDead=false;
+		this.hasHitDuringAttack=false;
 		
 		// 攻击视觉效果
 		this.attackEffectTimer=0;
@@ -376,6 +377,11 @@ class Noel extends Entity{
 			this.velocity.x *= 0.6;
 		}
 		
+		// 在攻击的有效帧窗口内进行命中检测（12-18之间）
+		if(this.attackTimer <= 18 && this.attackTimer > 12){
+			this.checkAttackHit();
+		}
+		
 		this.attackTimer--;
 		if(this.attackTimer <= 0){
 			this.status = "normal";
@@ -408,24 +414,24 @@ class Noel extends Entity{
 		this.status='attack';
 		this.attackTimer=Noel.AttackTime;
 		this.animationMachine.changeAnimation('attack');
+		this.hasHitDuringAttack=false;
 		
 		// 启动攻击视觉效果
 		this.attackEffectTimer=20;
 		this.showAttackRange=true;
-		
-		// 检查攻击范围内的敌人
-		this.checkAttackHit();
 		
 		console.log('🗡️ Mouse2 执行攻击! 面向:' + (this.facing === 1 ? '右' : '左'));
 		return true;
 	}
 	
 	checkAttackHit(){
-		// 攻击范围检测（针对Boss）
-		if(game.boss&&!game.boss.isDead){
-			let distance=Math.abs(this.position.x-game.boss.position.x);
-			if(distance<=Noel.AttackRange){
-				game.boss.takeDamage(Noel.AttackDamage,this.facing);
+		// 使用攻击矩形与Boss受击范围（hurtbox）重叠来判定命中，且每次攻击只命中一次
+		if(game.boss && !game.boss.isDead && !this.hasHitDuringAttack){
+			let attackHitbox = this.getAttackHitbox();
+			let bossHurtbox = (typeof game.boss.getHurtbox === 'function') ? game.boss.getHurtbox() : game.boss.hitbox;
+			if(attackHitbox.containsRect(bossHurtbox)){
+				game.boss.takeDamage(Noel.AttackDamage, this.facing);
+				this.hasHitDuringAttack = true;
 			}
 		}
 	}
