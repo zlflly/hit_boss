@@ -263,21 +263,27 @@ class Noel extends Entity{
 			}
 			machine.timer--;
 			let animation=machine.spritesheet.animations[machine.current];
-			//当前动画播放结束时，判断应该循环播放还是切换动画
-			if(machine.currentFrame==animation.length-1){
-				switch(machine.current){
-					case 'jump':
-					machine.changeAnimation('jump2');
-					break;
-					case 'fall':
-					machine.changeAnimation('fall2');
-					break;
-					default:
-					machine.currentFrame=0;
-					break;
+			
+			if (machine.current === 'death') {
+				if (machine.currentFrame < animation.length - 1) {
+					machine.currentFrame++;
 				}
-			}else{
-				machine.currentFrame++;
+			} else {
+				if(machine.currentFrame < animation.length - 1){
+					machine.currentFrame++;
+				} else {
+					switch(machine.current){
+						case 'jump':
+							machine.changeAnimation('jump2');
+							break;
+						case 'fall':
+							machine.changeAnimation('fall2');
+							break;
+						default:
+							machine.currentFrame=0;
+							break;
+					}
+				}
 			}
 		}
 		machine.timer+=Noel.animationSpeed[machine.current]/60;
