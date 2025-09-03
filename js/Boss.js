@@ -15,6 +15,7 @@ class Boss extends Entity {
 		PATROL: 'patrol', 
 		CHASE: 'chase',
 		ATTACK: 'attack',
+		RANGED_ATTACK: 'ranged_attack',  // 新增远程攻击状态
 		HURT: 'hurt',
 		DEATH: 'death'
 	};
@@ -115,6 +116,9 @@ class Boss extends Entity {
 			case Boss.States.ATTACK:
 				this.updateAttackState();
 				break;
+			case Boss.States.RANGED_ATTACK:
+				this.updateRangedAttackState(distanceToPlayer);
+				break;
 			case Boss.States.HURT:
 				this.updateHurtState();
 				break;
@@ -170,8 +174,15 @@ class Boss extends Entity {
 			return;
 		}
 		
+		// 近距离攻击
 		if (distanceToPlayer < Boss.AttackRange && this.attackCooldown <= 0) {
 			this.setState(Boss.States.ATTACK);
+			return;
+		}
+		
+		// 远程攻击 - 在追击范围内但超出近战范围时
+		if (distanceToPlayer > Boss.AttackRange && distanceToPlayer <= Boss.ProjectileRange && this.projectileCooldown <= 0) {
+			this.setState(Boss.States.RANGED_ATTACK);
 			return;
 		}
 		
@@ -190,14 +201,44 @@ class Boss extends Entity {
 			this.performAttack();
 			
 			// 随机选择攻击方式
-			if (Math.random() < 0.3 && this.specialAttackCooldown <= 0) {
-				// 30%概率使用特殊攻击
+			if (Math.random() < 0.5 && this.specialAttackCooldown <= 0) {
+				// 50%概率使用特殊攻击
 				this.performSpecialAttack();
 			} else if (this.projectileCooldown <= 0) {
 				// 发射光球
 				this.shootProjectile();
 			}
 			
+			this.setState(Boss.States.CHASE);
+		}
+	}
+	
+	updateRangedAttackState(distanceToPlayer) {
+		// 远程攻击时稍微减速
+		this.velocity.x *= 0.7;
+		
+		// 面向玩家
+		if (game.noel) {
+			let dx = game.noel.position.x - this.position.x;
+			if (Math.abs(dx) > 10) {
+				this.facing = Math.sign(dx);
+			}
+		}
+		
+		// 检查是否还能进行远程攻击
+		if (distanceToPlayer > Boss.ProjectileRange || distanceToPlayer < Boss.AttackRange) {
+			this.setState(Boss.States.CHASE);
+			return;
+		}
+		
+		// 执行远程攻击
+		if (this.projectileCooldown <= 0) {
+			this.shootProjectile();
+			this.projectileCooldown = 30; // 减少冷却时间，更频繁攻击
+		}
+		
+		// 随机切换到追击状态
+		if (this.stateTimer > 60 && Math.random() < 0.1) {
 			this.setState(Boss.States.CHASE);
 		}
 	}
@@ -388,8 +429,8 @@ class Boss extends Entity {
 		
 		// 标准化方向向量
 		let velocity = new Vector(
-			(dx / distance) * 4,
-			(dy / distance) * 4
+			(dx / distance) * 6,  // 增加光球速度
+			(dy / distance) * 6
 		);
 		
 		// 创建光球
@@ -402,7 +443,7 @@ class Boss extends Entity {
 		);
 		
 		this.projectiles.push(projectile);
-		this.projectileCooldown = 60; // 1秒冷却
+		this.projectileCooldown = 40; // 减少到0.67秒冷却
 		
 		console.log('💥 Boss发射光球!');
 	}
@@ -415,8 +456,8 @@ class Boss extends Entity {
 		for (let i = 0; i < projectileCount; i++) {
 			let angle = i * angleStep;
 			let velocity = new Vector(
-				Math.cos(angle) * 3,
-				Math.sin(angle) * 3
+				Math.cos(angle) * 4,  // 增加特殊攻击光球速度
+				Math.sin(angle) * 4
 			);
 			
 			let projectile = new Projectile(
@@ -430,7 +471,7 @@ class Boss extends Entity {
 			this.projectiles.push(projectile);
 		}
 		
-		this.specialAttackCooldown = 300; // 5秒冷却
+		this.specialAttackCooldown = 180; // 减少到3秒冷却
 		console.log('💥 Boss释放全屏光球攻击!');
 	}
 	
