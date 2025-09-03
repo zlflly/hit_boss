@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start test-sprites.html)",
+      "Bash(del test-sprites.html)",
+      "Bash(start game.html)",
+      "Bash(start debug.html)",
+      "Bash(start key-test.html)",
+      "Bash(start clear-config.html)",
+      "Bash(dir:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

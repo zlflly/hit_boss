@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="UTF-8">
+        <title>BrilliantInTeli</title>
+		<!-- 缺失样式：注释避免 404 -->
+		<!-- <link rel="stylesheet" type="text/css" href="../css/menu.css"> -->
+		<!-- <link rel="stylesheet" type="text/css" href="../css/dialog.css"> -->
+		<!-- <link rel="stylesheet" type="text/css" href="../css/mini_achi.css"> -->
+    </head>
+
+
+	
+    <body style="background-color:black;cursor:none;">
+		<div id="game">
+			<div class="menuButtons" style="opacity:0;display:none;">
+                <div class="buttonBox" onclick="closeMenu()">
+                    <!-- <img class="button-buttonimgs" src="../img/button.png"> -->
+                    <p class="content">继续游戏</p>
+                </div>
+                <div class="space"></div>
+				<div class="buttonBox" onclick="qSave()">
+					<!-- <img class="button-buttonimgs" src="../img/button.png"> -->
+					<p class="content">快速保存</p>
+				</div>
+				<div class="space"></div>
+				<div class="buttonBox" onclick="qLoad()">
+					<!-- <img class="button-buttonimgs" src="../img/button.png"> -->
+					<p class="content">快速读取</p>
+				</div>
+                <div class="space"></div>
+                <div class="buttonBox" onclick="window.location.href='index.html'">
+                    <!-- <img class="button-buttonimgs" src="../img/button.png"> -->
+                    <p class="content">返回主页</p>
+                </div> 
+            </div>
+			<audio src="" id="audio" style="display:none;"></audio>
+		</div>
+		<div id="resource" style="display:none;"></div>
+		<script src="js/Util.js"></script>
+		<script src="js/DataManager.js"></script>
+		<script src="js/InputManager.js"></script>
+		<script src="js/MapManager.js"></script>
+		<script src="js/EventManager.js"></script>
+		<script src="js/SaveManager.js"></script>		
+		<script src="js/Spritesheet.js"></script>
+		<script src="js/AnimationMachine.js"></script>
+		<script src="js/Entity.js"></script>
+		<script src="js/Noel.js"></script>
+		<script src="js/Boss.js"></script>
+		<script src="js/Camera.js"></script>
+		<script src="js/Game.js"></script>
+		<script src="js/Dialog.js"></script>
+		<script src="js/Over.js"></script>
+		<script src="js/Achieve.js"></script>
+		<script src="js/Minigame.js"></script>
+		<script src="js/FlappySnake.js"></script>
+		<script src="js/Tetris.js"></script>
+		<script>
+			window.onload=function(){ //创建游戏总管家
+				window.game=new Game();
+				/* 自动播放音乐依赖缺失 mp3 目录，暂时注释避免 NotSupportedError
+				function autoPlay(){
+					const music=["mp3/人魚の目覚め.mp3","mp3/雨のように.mp3","mp3/静かなる旅立ち.mp3"];
+					let index=0;
+					let audio=document.getElementById('audio');
+					audio.src=music[0];
+					audio.play();
+					function playNext(){
+						index+=Math.ceil(Math.random()*2)%3;
+						audio.src=music[index];
+						audio.play();
+					}
+					audio.addEventListener('ended',playNext);
+					document.removeEventListener('keydown',autoPlay);
+					document.removeEventListener('click',autoPlay);
+				}
+				document.addEventListener('keydown',autoPlay);
+				document.addEventListener('click',autoPlay);
+				*/
+			}
+			window._status='running';
+			async function closeMenu(){
+				document.body.style.cursor='none';
+				let box=document.getElementsByClassName('menuButtons')[0];
+				box.style.opacity=0;
+				await delay(300);
+				box.style.display='none';
+				if(game.status!='running')game.status=_status;
+			}
+			async function qSave(){
+				game.saveManager.save();
+				await closeMenu();
+			}
+			async function qLoad(){
+				await closeMenu();
+				window.location.reload();
+			}
+			document.addEventListener('keydown',async function(e){
+				if(KEYMAP[e.keyCode]=='Esc'&&game.status!='pause'&&game.status!='end'){
+					_status=game.status;
+					game.status='pause';
+					let box=document.getElementsByClassName('menuButtons')[0];
+					box.style.display='flex';
+					await delay(100);
+					document.body.style.cursor='auto';
+					box.style.opacity=1;
+				}
+			});
+		</script>
+    </body>
+</html>

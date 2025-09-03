@@ -1,0 +1,31 @@
+game.dataManager.resolve({"frames": {
+
+"stand/0000":
+{
+	"frame": {"x":0,"y":0,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+}
+},
+"animations": {
+	"dash": ["stand/0000"],
+	"fall": ["stand/0000"],
+	"fall2": ["stand/0000"],
+	"jump": ["stand/0000"],
+	"jump2": ["stand/0000"],
+	"run": ["stand/0000"],
+	"stand": ["stand/0000"]
+},
+"meta": {
+	"app": "custom-placeholder",
+	"version": "1.0",
+	"image": "Rat_Idle.png",
+	"format": "RGBA8888",
+	"size": {"w":64,"h":64},
+	"scale": "1"
+}
+})
+
+

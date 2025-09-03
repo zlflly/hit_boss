@@ -1,0 +1,27 @@
+game.dataManager.resolve(
+{
+	"background":"img/bg/brick.png",
+	"tileMap":[{
+		"hitbox":[0,0,736,16],
+		"texture":"img/map(6).png"
+	},
+	{
+		"hitbox":[0,336,736,64]
+	},
+	{
+		"hitbox":[0,16,16,288] //左侧
+	},
+	{
+		"hitbox":[720,16,16,288] 
+	},
+	{
+		"hitbox":[256,176,112,16]  //第一个障碍物
+	},
+	{
+		"hitbox":[448,144,96,16]
+	}
+	
+	],
+	"cameraBound":[448,448,88,88]
+}
+)

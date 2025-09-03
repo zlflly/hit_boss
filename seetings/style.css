@@ -1,0 +1,176 @@
+body{
+    height: 100vh;
+    background-image: url(background.jpg);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.box{
+    height: 750px;
+    width: 490px;
+    background-image: url(shezhi.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: inline;
+    justify-content: center;
+	position: relative;
+}
+
+.box > h2 {
+    color: rgba;
+    font-family: 华文行楷;
+    margin-top: 20px;
+    margin-left: 190px;
+    font-size: 60px;
+    font-weight: 300;
+}
+
+.box .yinpin{
+    height: 50px;
+    width: 490px;
+    display: flex;
+}
+
+.box .yinpin > input{
+    height: 50px;
+    width: 300px;
+}
+
+.box .yinpin > h3{
+    color: black;
+    font-family: 宋体;
+    font-size: 20px;
+    font-weight: 200;
+    margin-top: 0px;
+    margin-left: 30px;
+}
+
+.box .zimu{
+    height: 50px;
+    width: 490px;
+    display: flex;
+}
+
+.box .zimu > input{
+    height: 50px;
+    width: 300px;
+}
+
+.box .zimu > h3{
+    color: black;
+    font-family: 宋体;
+    font-size: 20px;
+    font-weight: 200;
+    margin-top: 0px;
+    margin-left: 30px;
+}
+
+.box .anjian{
+    height: 350px;
+    width: 490px;
+    display: block;
+}
+
+.box .anjian > h3{
+    color: black;
+    font-family: 宋体;
+    font-size: 20px;
+    font-weight: 200;
+    margin-top: 0px;
+    margin-left: 30px;
+}
+
+.box .anjian .zhiling{
+    height: 30px;
+    width: 490px;
+    display: flex;
+    align-items: center;
+}
+
+.box .anjian .zhiling > h4{
+    color: black;
+    font-family: 宋体;
+    font-size: 15px;
+    font-weight: 200;
+    margin-top: 20px;
+    align-items: center;
+	position: absolute;
+	left: 18%;
+}
+
+.box .anjian .zhiling button:nth-of-type(1){
+    width: auto;
+    height: 25px;
+    color: rgba(255,255,255,0.9);
+    border: 1px solid black;
+    background: rgb(57, 56, 56);
+    border-radius: 5px;
+    margin-top: 2px;
+	left: 45%;
+	position: absolute;
+    font-family: 楷体;
+    font-size: 20px;
+}
+
+.box .anjian .zhiling button:nth-of-type(2){
+    width: 80px;
+    height: 25px;
+    color: rgba(255,255,255,0.9);
+    border: 1px solid black;
+    background: rgb(57, 56, 56);
+    border-radius: 5px;
+    margin-top: 2px;
+    left: 70%;
+	position: absolute;
+    font-family: 楷体;
+    font-size: 20px;
+}
+
+.box .anjian .zhiling button:hover {
+    border: 1px solid black;
+    background: gray;
+}
+
+.box .btn{
+	margin-top: 100px;
+    height: 130px;
+    width: 490px;
+    display: flex;
+}
+
+.box .btn button:nth-of-type(1){
+    width: 150px;
+    height: 70px;
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(192, 119, 91, 0.7);
+    background: rgba(192, 119, 91, 0.5);
+    border-radius: 15px;
+    margin-top: 30px;
+    margin-left: 60px;
+    font-family: 华文琥珀;
+    font-size: 40px;
+}
+
+.box .btn button:nth-of-type(2){
+    width: 150px;
+    height: 70px;
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(192, 119, 91, 0.7);
+    background: rgba(192, 119, 91, 0.5);
+    border-radius: 15px;
+    margin-top: 30px;
+    margin-left: 70px;
+    font-family: 华文琥珀;
+    font-size: 40px;
+}
+
+.box .btn button:hover {
+    border: 1px solid rgba(251, 128, 71, 0.7);
+    background: rgba(251, 128, 71, 0.5);
+}

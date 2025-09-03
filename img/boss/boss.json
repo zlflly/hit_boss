@@ -1,0 +1,146 @@
+game.dataManager.resolve({"frames": {
+
+"idle/0000":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"idle/0001":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"idle/0002":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"idle/0003":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+
+"walk/0000":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"walk/0001":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"walk/0002":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"walk/0003":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+
+"attack/0000":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"attack/0001":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"attack/0002":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+
+"hurt/0000":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+
+"death/0000":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"death/0001":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+},
+"death/0002":
+{
+	"frame": {"x":0,"y":0,"w":480,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":480,"h":640},
+	"sourceSize": {"w":480,"h":640}
+}
+
+},
+"animations": {
+	"idle": ["idle/0000", "idle/0001", "idle/0002", "idle/0003"],
+	"walk": ["walk/0000", "walk/0001", "walk/0002", "walk/0003"], 
+	"run": ["walk/0000", "walk/0001", "walk/0002", "walk/0003"],
+	"attack": ["attack/0000", "attack/0001", "attack/0002"],
+	"hurt": ["hurt/0000"],
+	"death": ["death/0000", "death/0001", "death/0002"],
+	"stand": ["idle/0000", "idle/0001", "idle/0002", "idle/0003"]
+},
+"meta": {
+	"app": "custom-placeholder",
+	"version": "1.0",
+	"image": "boss.jpg",
+	"format": "RGBA8888",
+	"size": {"w":480,"h":640},
+	"scale": "1"
+}
+})

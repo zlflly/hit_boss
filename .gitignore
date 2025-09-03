@@ -1,0 +1,17 @@
+# 忽略有问题的nul文件
+nul
+
+# 忽略临时文件和系统文件
+*.tmp
+*.temp
+Thumbs.db
+.DS_Store
+
+# 忽略IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 忽略日志文件
+*.log
