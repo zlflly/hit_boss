@@ -26,15 +26,15 @@ class Boss extends Entity {
 		'death': 10
 	};
 	
-	constructor(sprite1, sprite2) {
-		let size = new Vector(60, 80);  // 适应乐高Boss的尺寸
-		sprite1.scale.set(0.15, 0.15);   // 缩小乐高Boss以适应游戏
-		sprite2.scale.set(0.15, 0.15);
-		let animationMachine = new AnimationMachine(sprite1, sprite2);
-		super(size, animationMachine);
+	constructor(image) {
+		let size = new Vector(80, 100);  // 适应纸张Boss的尺寸
+		super(size, null);
+		
+		// 直接使用单张图片
+		this.image = image;
+		this.scale = 0.4;  // 调整缩放比例以适应游戏
 		
 		this.anchor.set(0.5, 1.0);
-		this.animationMachine.changeAnimation('idle');
 		
 		// 战斗属性
 		this.health = Boss.MaxHealth;
@@ -63,7 +63,6 @@ class Boss extends Entity {
 	
 	update(delta) {
 		if (this.isDead) {
-			this.updateAnimation(delta);
 			return;
 		}
 		
@@ -75,9 +74,6 @@ class Boss extends Entity {
 		
 		// 物理更新
 		this.rigidMove(this.velocity, game.mapManager.getCollidable(), this.handleCollision.bind(this));
-		
-		// 动画更新
-		this.updateAnimation(delta);
 	}
 	
 	updateTimers() {
@@ -203,25 +199,22 @@ class Boss extends Entity {
 		this.currentState = newState;
 		this.stateTimer = 0;
 		
-		// 状态转换时的动画和行为
+		// 状态转换时的行为
 		switch (newState) {
 			case Boss.States.IDLE:
-				this.animationMachine.changeAnimation('idle');
+				// 待机状态
 				break;
 			case Boss.States.PATROL:
 			case Boss.States.CHASE:
-				this.animationMachine.changeAnimation('walk');
+				// 移动状态
 				break;
 			case Boss.States.ATTACK:
-				this.animationMachine.changeAnimation('attack');
 				this.attackTimer = 30; // 攻击持续时间
 				break;
 			case Boss.States.HURT:
-				this.animationMachine.changeAnimation('hurt');
 				this.hurtTimer = 20;
 				break;
 			case Boss.States.DEATH:
-				this.animationMachine.changeAnimation('death');
 				this.isDead = true;
 				console.log('💀 Boss defeated!');
 				break;
@@ -298,33 +291,7 @@ class Boss extends Entity {
 		}
 	}
 	
-	updateAnimation(delta) {
-		if (!this.animationMachine || !this.animationMachine.current) return;
-		
-		let animName = this.animationMachine.current;
-		let speed = Boss.animationSpeed[animName] || 8;
-		
-		this.animationMachine.timer++;
-		
-		if (this.animationMachine.timer >= speed) {
-			this.animationMachine.timer = 0;
-			
-			let spritesheet = this.animationMachine.spritesheet;
-			let frames = spritesheet.animations[animName];
-			
-			if (frames && frames.length > 0) {
-				this.animationMachine.currentFrame++;
-				if (this.animationMachine.currentFrame >= frames.length) {
-					// 死亡动画只播放一次
-					if (animName === 'death') {
-						this.animationMachine.currentFrame = frames.length - 1;
-					} else {
-						this.animationMachine.currentFrame = 0;
-					}
-				}
-			}
-		}
-	}
+
 	
 	draw() {
 		// 受伤时闪烁效果
@@ -332,8 +299,23 @@ class Boss extends Entity {
 			return; // 跳过绘制产生闪烁
 		}
 		
-		let pos = game.camera.getDrawPos(this.position.sub(36, 48));
-		this.animationMachine.draw(pos, this.facing === 1);
+		if (!this.image) return;
+		
+		let pos = game.camera.getDrawPos(this.position.sub(40, 50));
+		let width = this.image.width * this.scale;
+		let height = this.image.height * this.scale;
+		
+		// 根据朝向决定是否水平翻转
+		if (this.facing === 1) {
+			// 向右，正常绘制
+			game.ctx.drawImage(this.image, pos.x, pos.y, width, height);
+		} else {
+			// 向左，水平翻转
+			game.ctx.save();
+			game.ctx.scale(-1, 1);
+			game.ctx.drawImage(this.image, -pos.x - width, pos.y, width, height);
+			game.ctx.restore();
+		}
 		
 		// 绘制生命值条（调试用）
 		this.drawHealthBar();

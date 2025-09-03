@@ -347,6 +347,9 @@ class Noel extends Entity{
 			let pos=game.camera.getDrawPos(this.position.sub(11,152));
 			game.ctx.drawImage(this.interactionHint,pos.x,pos.y);
 		}
+		
+		// 绘制生命值条
+		this.drawHealthBar();
 	}
 	
 	// ===== 战斗系统方法 =====
@@ -491,5 +494,34 @@ class Noel extends Entity{
 		game.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
 		game.ctx.lineWidth = 8;
 		game.ctx.stroke();
+	}
+	
+	drawHealthBar(){
+		if(this.isDead) return;
+		
+		let healthPercent = this.health / Noel.MaxHealth;
+		let barWidth = 60;
+		let barHeight = 6;
+		
+		let pos = game.camera.getDrawPos(this.position.sub(barWidth / 2, 50));
+		
+		// 背景条
+		game.ctx.fillStyle = '#333';
+		game.ctx.fillRect(pos.x, pos.y, barWidth, barHeight);
+		
+		// 生命值条
+		game.ctx.fillStyle = healthPercent > 0.3 ? '#4f4' : '#f44';
+		game.ctx.fillRect(pos.x, pos.y, barWidth * healthPercent, barHeight);
+		
+		// 边框
+		game.ctx.strokeStyle = '#fff';
+		game.ctx.lineWidth = 1;
+		game.ctx.strokeRect(pos.x, pos.y, barWidth, barHeight);
+		
+		// 生命值文字
+		game.ctx.fillStyle = '#fff';
+		game.ctx.font = '12px Arial';
+		game.ctx.textAlign = 'center';
+		game.ctx.fillText(`${this.health}/${Noel.MaxHealth}`, pos.x + barWidth/2, pos.y - 2);
 	}
 }

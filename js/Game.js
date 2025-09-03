@@ -19,10 +19,9 @@ class Game{
 		this.noel=new Noel(s1,s2);
 		// await this.noel.loadHintImg(); // 缺失 img/point.png 时临时注释，避免 404
 		
-		// 创建Boss（使用你的乐高Boss图片）
-		let bossS1=await this.dataManager.loadSpritesheet('img/boss/boss.json');
-		let bossS2=await this.dataManager.loadSpritesheet('img/boss/boss.json');
-		this.boss=new Boss(bossS1,bossS2);
+		// 创建Boss（使用单张图片）
+		let bossImage=await this.dataManager.loadImg('img/boss/image.png');
+		this.boss=new Boss(bossImage);
 		this.boss.position.set(800,400); // Boss在地图右侧
 		
 		this.mapManager=new MapManager();
