@@ -1,12 +1,13 @@
 class Boss extends Entity {
 	// 静态配置参数
 	static MaxHealth = 200;
-	static MoveSpeed = 1.5;
+	static MoveSpeed = 2.5;         // 增加移动速度
 	static AttackDamage = 30;
 	static AttackRange = 60;
-	static AttackCooldown = 180;    // 3秒攻击冷却
-	static DetectionRange = 300;    // 检测玩家距离
-	static ChaseRange = 250;        // 追击距离
+	static AttackCooldown = 120;    // 减少攻击冷却到2秒
+	static DetectionRange = 500;    // 大幅增加检测距离
+	static ChaseRange = 450;        // 大幅增加追击距离
+	static ProjectileRange = 400;   // 光球攻击距离
 	
 	// AI状态枚举
 	static States = {
@@ -58,6 +59,12 @@ class Boss extends Entity {
 		this.patrolDistance = 0;
 		this.maxPatrolDistance = 200;
 		
+		// 光球攻击系统
+		this.projectiles = [];
+		this.projectileCooldown = 0;
+		this.specialAttackCooldown = 0;
+		this.specialAttackTimer = 0;
+		
 		console.log('🐉 Boss created with health:', this.health);
 	}
 	
@@ -68,6 +75,9 @@ class Boss extends Entity {
 		
 		// 更新计时器
 		this.updateTimers();
+		
+		// 更新光球
+		this.updateProjectiles();
 		
 		// AI状态机更新
 		this.updateAI();
@@ -81,6 +91,9 @@ class Boss extends Entity {
 		if (this.attackCooldown > 0) this.attackCooldown--;
 		if (this.hurtTimer > 0) this.hurtTimer--;
 		if (this.invulnerableTimer > 0) this.invulnerableTimer--;
+		if (this.projectileCooldown > 0) this.projectileCooldown--;
+		if (this.specialAttackCooldown > 0) this.specialAttackCooldown--;
+		if (this.specialAttackTimer > 0) this.specialAttackTimer--;
 		this.stateTimer++;
 	}
 	
@@ -175,6 +188,15 @@ class Boss extends Entity {
 			
 			// 执行攻击判定
 			this.performAttack();
+			
+			// 随机选择攻击方式
+			if (Math.random() < 0.3 && this.specialAttackCooldown <= 0) {
+				// 30%概率使用特殊攻击
+				this.performSpecialAttack();
+			} else if (this.projectileCooldown <= 0) {
+				// 发射光球
+				this.shootProjectile();
+			}
 			
 			this.setState(Boss.States.CHASE);
 		}
@@ -319,6 +341,9 @@ class Boss extends Entity {
 		
 		// 绘制生命值条（调试用）
 		this.drawHealthBar();
+		
+		// 绘制光球
+		this.drawProjectiles();
 	}
 	
 	drawHealthBar() {
@@ -342,5 +367,77 @@ class Boss extends Entity {
 		game.ctx.strokeStyle = '#fff';
 		game.ctx.lineWidth = 1;
 		game.ctx.strokeRect(pos.x, pos.y, barWidth, barHeight);
+	}
+	
+	// ===== 光球攻击系统 =====
+	
+	updateProjectiles() {
+		// 更新所有光球
+		for (let i = this.projectiles.length - 1; i >= 0; i--) {
+			this.projectiles[i].update();
+		}
+	}
+	
+	shootProjectile() {
+		if (!game.noel || game.noel.isDead) return;
+		
+		// 计算朝向玩家的方向
+		let dx = game.noel.position.x - this.position.x;
+		let dy = game.noel.position.y - this.position.y;
+		let distance = Math.sqrt(dx * dx + dy * dy);
+		
+		// 标准化方向向量
+		let velocity = new Vector(
+			(dx / distance) * 4,
+			(dy / distance) * 4
+		);
+		
+		// 创建光球
+		let projectile = new Projectile(
+			this.position.x,
+			this.position.y - 20,
+			velocity,
+			25, // 伤害
+			180  // 生命周期
+		);
+		
+		this.projectiles.push(projectile);
+		this.projectileCooldown = 60; // 1秒冷却
+		
+		console.log('💥 Boss发射光球!');
+	}
+	
+	performSpecialAttack() {
+		// 向四周无差别释放光球
+		let projectileCount = 8;
+		let angleStep = (Math.PI * 2) / projectileCount;
+		
+		for (let i = 0; i < projectileCount; i++) {
+			let angle = i * angleStep;
+			let velocity = new Vector(
+				Math.cos(angle) * 3,
+				Math.sin(angle) * 3
+			);
+			
+			let projectile = new Projectile(
+				this.position.x,
+				this.position.y - 20,
+				velocity,
+				20, // 伤害
+				150  // 生命周期
+			);
+			
+			this.projectiles.push(projectile);
+		}
+		
+		this.specialAttackCooldown = 300; // 5秒冷却
+		console.log('💥 Boss释放全屏光球攻击!');
+	}
+	
+	drawProjectiles() {
+		// 绘制所有光球
+		for (let projectile of this.projectiles) {
+			projectile.draw();
+		}
 	}
 }
